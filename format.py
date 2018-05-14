@@ -146,6 +146,13 @@ def cate_key(c):
 
 def format_forum(courses,tmpl,dateTmpl=Template('$date : \n'),filter=False):
     kf = lambda x:x['date']
+    courses = courses
+    try:
+        folder_date = datetime.strptime(args.folder,'%Y-%m-%d')
+        courses = [c for c in courses if datetime.fromtimestamp(time.mktime(c['date']))>folder_date]
+    except ValueError:
+        pass
+
     if filter:
         courses = [c for c in courses if c['date']>time.gmtime() and datetime.fromtimestamp(time.mktime(c['date']))<datetime.now()+timedelta(days=10)]
     courses = sorted(courses, key=kf)
