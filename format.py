@@ -21,10 +21,12 @@ Autres
 UCI classe 2
 1-2
 Minimes
+Juniors
 Femmes MC
 Handisport
 Fédérale Juniors
-Régionale Juniors""".splitlines())
+Régionale Juniors
+Randonnée VTT""".splitlines())
 
 exclude_types = set(
 """Randonnée
@@ -38,10 +40,10 @@ locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
 
 ## DOWNLOAD FUNCTIONS
 
-def get_ffc():
-    html = open('calffc.html','r',encoding='utf8')
+def get_ffc(fichier):
+    html = open(fichier,'r',encoding='utf8')
     soup = BeautifulSoup(html, 'html.parser')
-    courses_table = soup.find(attrs={'id':'se_mod_allevents_171'}).table
+    courses_table = soup.find(attrs={'class':'se_mod_allevents_contenu'}).table
 
     courses = []
     for c in courses_table.contents[::2]:
@@ -176,7 +178,7 @@ args = parser.parse_args()
 os.chdir(args.folder)
 
 # courses = get_ffc()
-courses = get_fsgt42() + get_ffc() + get_fsgt69() + get_fsgt71()
+courses = get_fsgt42() + get_ffc('calffc.html') + get_ffc('calffcl.html') + get_fsgt69() + get_fsgt71()
 courses = [el for el in courses if
     not el['cate'] in exclude_cates and
     (not 'type' in el or not el['type'] in exclude_types) and
