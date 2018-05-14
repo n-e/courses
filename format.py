@@ -50,7 +50,7 @@ def get_ffc(fichier):
         details = c.next_sibling.td.contents
         c_el = {
             'fede':'FFC',
-            'nom':re.sub(r'^.*?- +','',c.get_text()),
+            'nom':re.sub(r'^.*?- +','',c.get_text()).title(),
             'date':time.strptime(details[0].get_text(),'%A %d %B %Y'),
             'cate':details[3].get_text(),
             'lieu':details[6].get_text(),
@@ -124,7 +124,7 @@ def get_fsgt71():
                     # print(ctrtd[0].get_text())
                     c_el = {
                         'fede':'FSGT 71',
-                        'nom': ctrtd[1].get_text(),
+                        'nom': ctrtd[1].get_text().title(),
                         'date': time.strptime(dayofmonth+ ' ' + month + ' 2018','%d %m %Y'),
                         'cate': '',
                         'lieu': ctrtd[3].get_text(),
@@ -162,9 +162,10 @@ def format_forum(courses,tmpl,dateTmpl=Template('$date : \n'),filter=False):
 
 raw_template = Template('\t$fede $cate\t$nom\t$lieu\n')
 forum_template = Template('- $fede $cate : [url=$lien]$nom[/url] $lieu\n')
-html_template = Template("""<tr class='course'>
-    <td>$fede $cate</td>
-    <td><a href='$lien'>$nom</a></td><td>$lieu</td>
+html_template = Template("""<tr class='course $fede_slug $cate_slug'>
+    <td class='cate'>$fede $cate</td>
+    <td><a href='$lien'>$nom</a></td>
+    <td class='lieu'>$lieu</td>
 </tr>\n""")
 
 ## PROGRAM START
@@ -187,6 +188,10 @@ courses = [el for el in courses if
     (not 'BREVET' in el['nom'])
     ]
 
+for el in courses:
+    el['fede_slug']=re.sub(' ','-',el['fede']).lower()
+    el['cate_slug']=re.sub("[ ']",'-',el['cate']).lower()
+
 
 if args.f == 'forum':
     print(format_forum(courses,filter=True,tmpl=forum_template))
@@ -198,9 +203,20 @@ elif args.f == 'html' :
     <head>
     <meta charset='UTF-8'>
     <style>
-    body {font-family:Helvetica, Arial, sans-serif; font-size:14px;}
+    body {font-family:Helvetica, Arial, sans-serif; font-size:14px; line-height:1.2; color:#333;}
     table { border-collapse:collapse; }
-    td { border:1px solid #666; }
+    td { padding: 2px 4px;}
+    .date td {padding-top:1.5em; font-weight:bold;}
+    .course { border:1px solid #aaa; }
+    .lieu {font-size:90%}
+    .fsgt-69 { color: #ff2125;}
+    .pass-cyclisme { color: #277fff;}
+    .fsgt-69, .pass-cyclisme {font-weight:600;}
+    a {color: inherit; text-decoration:none;}
+    a:hover {text-decoration:underline;}
+    @media print {
+        body { color:black; font-size:8pt; columns:2;}
+    }
     </style>
     </head>
     <body><table>''')
