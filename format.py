@@ -180,6 +180,7 @@ html_template = Template("""<tr class='course $fede_slug $cate_slug'>
 parser = argparse.ArgumentParser()
 parser.add_argument('folder',nargs='?',default='.')
 parser.add_argument('-f',choices=['forum','html','txt'],default='forum')
+parser.add_argument('--noopen',action='store_true',help='Exclure les courses accessibles uniquement avec licence PCO')
 
 args = parser.parse_args()
 
@@ -190,6 +191,7 @@ courses = get_fsgt42() + get_ffc('calffc.html') + get_ffc('calffcl.html') + get_
 courses = [el for el in courses if
     not el['cate'] in exclude_cates and
     (not 'type' in el or not el['type'] in exclude_types) and
+    (not "Pass'Open" in el['cate'] or not args.noopen) and
     (not 'Rando' in el['nom']) and
     (not 'RANDO' in el['nom']) and
     (not 'BREVET' in el['nom'])
