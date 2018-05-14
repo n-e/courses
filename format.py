@@ -1,9 +1,12 @@
 from bs4 import BeautifulSoup
 from string import Template
 from itertools import groupby
+import os
 import re
 import locale
 import time
+import argparse
+import sys
 from datetime import timedelta,datetime
 
 exclude_cates = set(
@@ -31,6 +34,7 @@ Bourse""".splitlines())
 
 # for parsing dates
 locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
+
 
 ## DOWNLOAD FUNCTIONS
 
@@ -112,7 +116,7 @@ def get_fsgt71():
                 ctrtd = ctr.find_all('td')
                 if len(ctrtd)<3 or len(re.findall(r'[0-3]?[0-9]',ctrtd[0].get_text()))==0:
                     if not 'COLE' in (ctr.get_text()): # ECOLE DE VELO
-                        print('ERROR IMPORTING:', ctrtd)
+                        print('ERROR IMPORTING:', ctrtd,file=sys.stderr)
                 else:
                     dayofmonth = re.findall(r'[0-3]?[0-9]',ctrtd[0].get_text())[0]
                     # print(ctrtd[0].get_text())
@@ -127,15 +131,9 @@ def get_fsgt71():
                     courses.append(c_el)
     return courses
 
-# courses = get_ffc()
-courses = get_fsgt42() + get_ffc() + get_fsgt69() + get_fsgt71()
-courses = [el for el in courses if
-    not el['cate'] in exclude_cates and
-    (not 'type' in el or not el['type'] in exclude_types)]
 
-## PRINT DATA
+## FORMATING FUNCTIONS
 
-tmpl = Template('\t$fede $cate\t$nom\t$lieu\n')
 
 def cate_key(c):
     if c['fede'] == 'FSGT 69': return 1
@@ -144,31 +142,69 @@ def cate_key(c):
     if 'Open' in c['cate']: return 5
     else: return 4
 
-def format_courses(courses):
+def format_forum(courses,tmpl,dateTmpl=Template('$date : \n'),filter=False):
     kf = lambda x:x['date']
+    if filter:
+        courses = [c for c in courses if c['date']>time.gmtime() and datetime.fromtimestamp(time.mktime(c['date']))<datetime.now()+timedelta(days=10)]
     courses = sorted(courses, key=kf)
     out = ''
     for k, gg in groupby(courses, kf):
-        out+= time.strftime('%a %d %B',k) + '\n'
+        # out+= time.strftime('%a %d %B',k) + ' :\n'
+        out += dateTmpl.substitute({"date":time.strftime('%a %d %B',k)})
         g = sorted(gg, key=cate_key)
         for c in g:
             c['datef'] = time.strftime('%a %d %B',c['date'])
             out += tmpl.substitute(c)
     return out
 
-tmpl2 = Template('- $fede $cate : [url=$lien]$nom[/url] $lieu\n')
-def format_forum(courses):
-    kf = lambda x:x['date']
-    courses = [c for c in courses if c['date']>time.gmtime() and datetime.fromtimestamp(time.mktime(c['date']))<datetime.now()+timedelta(days=10)]
-    courses = sorted(courses, key=kf)
-    out = ''
-    for k, gg in groupby(courses, kf):
-        out+= time.strftime('%a %d %B',k) + ' :\n'
-        g = sorted(gg, key=cate_key)
-        for c in g:
-            c['datef'] = time.strftime('%a %d %B',c['date'])
-            out += tmpl2.substitute(c)
-    return out
-# print(format_courses(courses))
 
-print(format_forum(courses))
+raw_template = Template('\t$fede $cate\t$nom\t$lieu\n')
+forum_template = Template('- $fede $cate : [url=$lien]$nom[/url] $lieu\n')
+html_template = Template("""<tr class='course'>
+    <td>$fede $cate</td>
+    <td><a href='$lien'>$nom</a></td><td>$lieu</td>
+</tr>\n""")
+
+## PROGRAM START
+
+parser = argparse.ArgumentParser()
+parser.add_argument('folder',nargs='?',default='.')
+parser.add_argument('-f',choices=['forum','html','txt'],default='forum')
+
+args = parser.parse_args()
+
+os.chdir(args.folder)
+
+# courses = get_ffc()
+courses = get_fsgt42() + get_ffc() + get_fsgt69() + get_fsgt71()
+courses = [el for el in courses if
+    not el['cate'] in exclude_cates and
+    (not 'type' in el or not el['type'] in exclude_types) and
+    (not 'Rando' in el['nom']) and
+    (not 'RANDO' in el['nom']) and
+    (not 'BREVET' in el['nom'])
+    ]
+
+
+if args.f == 'forum':
+    print(format_forum(courses,filter=True,tmpl=forum_template))
+elif args.f == 'txt' :
+    print(format_forum(courses,filter=False,tmpl=raw_template))
+elif args.f == 'html' :
+    print('''<!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset='UTF-8'>
+    <style>
+    body {font-family:Helvetica, Arial, sans-serif; font-size:14px;}
+    table { border-collapse:collapse; }
+    td { border:1px solid #666; }
+    </style>
+    </head>
+    <body><table>''')
+    print(format_forum(
+        courses,
+        filter=False,
+        tmpl=html_template,
+        dateTmpl=Template('<tr class="date"><td colspan="3">$date :</td></tr>')))
+    print('</table></body></html>')
