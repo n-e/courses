@@ -1,4 +1,3 @@
-import urllib.request
 from bs4 import BeautifulSoup
 from string import Template
 from itertools import groupby
@@ -36,8 +35,6 @@ locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
 ## DOWNLOAD FUNCTIONS
 
 def get_ffc():
-    #ffc_url = 'http://www.auvergnerhonealpescyclisme.com/route/calendrier'
-    #c = urllib.request.urlopen(ffc_url).read()
     html = open('calffc.html','r',encoding='utf8')
     soup = BeautifulSoup(html, 'html.parser')
     courses_table = soup.find(attrs={'id':'se_mod_allevents_171'}).table
@@ -57,8 +54,6 @@ def get_ffc():
     return courses
 
 def get_fsgt69():
-    #ffc_url = 'http://www.cyclismerhonefsgt.fr/calendrier/'
-    #c = urllib.request.urlopen(ffc_url).read()
     html = open('cal69.html','r',encoding='utf8')
     soup = BeautifulSoup(html, 'html.parser')
     courses_table = soup.find(attrs={'class':'table-striped'})
@@ -80,8 +75,6 @@ def get_fsgt69():
     return courses
 
 def get_fsgt42():
-    #ffc_url = 'http://www.fsgt42.com/cyclisme/index.php?page=listecourses'
-    #c = urllib.request.urlopen(ffc_url).read()
     html = open('cal42.html','r',encoding='utf8')
     soup = BeautifulSoup(html, 'html.parser')
     courses_table = soup.find_all('table')[1]
@@ -101,8 +94,6 @@ def get_fsgt42():
     return courses
 
 def get_fsgt71():
-    #ffc_url = 'http://www.fsgt71velo.fr/2018/calendrier/calendrier.html'
-    #c = urllib.request.urlopen(ffc_url).read()
     html = open('cal71.html','r',encoding='utf8')
     soup = BeautifulSoup(html, 'html5lib')
     courses_table = soup.find(attrs={'id':'tableau'})
