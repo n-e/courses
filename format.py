@@ -212,6 +212,7 @@ courses = [el for el in courses if
 for el in courses:
     el['fede_slug']=re.sub(' ','-',el['fede']).lower()
     el['cate_slug']=re.sub("[ ']",'-',el['cate']).lower()
+    el['lieu']=el['lieu'].title()
 
 
 jinjaenv.filters['datef'] = lambda d:time.strftime('%a %d %B',d)
