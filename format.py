@@ -8,6 +8,15 @@ import time
 import argparse
 import sys
 from datetime import timedelta,datetime
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+jinjaloader=FileSystemLoader(
+    os.path.dirname(os.path.abspath(__file__)) + '/templates')
+jinjaenv = Environment(
+    loader=jinjaloader,
+#    autoescape=select_autoescape(['html', 'xml'])
+)
+
 
 exclude_cates = set(
 """Minimes et Femmes MC
@@ -144,8 +153,17 @@ def cate_key(c):
     if 'Open' in c['cate']: return 5
     else: return 4
 
-def format_forum(courses,tmpl,dateTmpl=Template('$date : \n'),filter=False):
+sttodt = lambda x:datetime.fromtimestamp(time.mktime(x))
+
+def getsamediorday(x):
+    dt = datetime.fromtimestamp(time.mktime(x))
+    ret = dt+timedelta(days=5-dt.weekday()) if dt.weekday() in [4,5,6] else dt+timedelta(days=-2) if dt.weekday()==0 else dt
+    return ret.timetuple()
+
+def format_forum(courses,filter=False):
     kf = lambda x:x['date']
+    kf2 = lambda x:getsamediorday(x[0]['date'])
+
     courses = courses
     try:
         folder_date = datetime.strptime(args.folder,'%Y-%m-%d')
@@ -155,25 +173,19 @@ def format_forum(courses,tmpl,dateTmpl=Template('$date : \n'),filter=False):
 
     if filter:
         courses = [c for c in courses if c['date']>time.gmtime() and datetime.fromtimestamp(time.mktime(c['date']))<datetime.now()+timedelta(days=10)]
+    
+    courses = sorted(courses,key=cate_key)
     courses = sorted(courses, key=kf)
-    out = ''
-    for k, gg in groupby(courses, kf):
-        # out+= time.strftime('%a %d %B',k) + ' :\n'
-        out += dateTmpl.substitute({"date":time.strftime('%a %d %B',k)})
-        g = sorted(gg, key=cate_key)
-        for c in g:
-            c['datef'] = time.strftime('%a %d %B',c['date'])
-            out += tmpl.substitute(c)
-    return out
+
+    byd = [list(v) for k,v in groupby(courses,kf)]
+    # print(byd)
+    bywe = [list(v) for k,v in groupby(byd,kf2)]
+    return bywe
 
 
 raw_template = Template('\t$fede $cate\t$nom\t$lieu\n')
 forum_template = Template('- $fede $cate : [url=$lien]$nom[/url] $lieu\n')
-html_template = Template("""<tr class='course $fede_slug $cate_slug'>
-    <td class='cate'>$fede $cate</td>
-    <td><a href='$lien'>$nom</a></td>
-    <td class='lieu'>$lieu</td>
-</tr>\n""")
+
 
 ## PROGRAM START
 
@@ -202,36 +214,29 @@ for el in courses:
     el['cate_slug']=re.sub("[ ']",'-',el['cate']).lower()
 
 
+jinjaenv.filters['datef'] = lambda d:time.strftime('%a %d %B',d)
+jinjaenv.filters['day'] = lambda d:time.strftime('%a %d',d)
+
+def formatwe(d):
+    dt = sttodt(d)
+    if dt.weekday() in [4,5,6,0]:
+        return time.strftime('WE du %d %B',d)
+    else:
+        return time.strftime('%a %d %B',d)
+
+jinjaenv.filters['formatwe'] = formatwe
+
+
 if args.f == 'forum':
     print(format_forum(courses,filter=True,tmpl=forum_template))
 elif args.f == 'txt' :
     print(format_forum(courses,filter=False,tmpl=raw_template))
 elif args.f == 'html' :
-    print('''<!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset='UTF-8'>
-    <style>
-    body {font-family:Helvetica, Arial, sans-serif; font-size:14px; line-height:1.2; color:#333;}
-    table { border-collapse:collapse; }
-    td { padding: 2px 4px;}
-    .date td {padding-top:1.5em; font-weight:bold;}
-    .course { border:1px solid #aaa; }
-    .lieu {font-size:90%}
-    .fsgt-69 { color: #ff2125;}
-    .pass-cyclisme { color: #277fff;}
-    .fsgt-69, .pass-cyclisme {font-weight:600;}
-    a {color: inherit; text-decoration:none;}
-    a:hover {text-decoration:underline;}
-    @media print {
-        body { color:black; font-size:8pt; columns:2;}
-    }
-    </style>
-    </head>
-    <body><table>''')
-    print(format_forum(
+    data = format_forum(
         courses,
-        filter=False,
-        tmpl=html_template,
-        dateTmpl=Template('<tr class="date"><td colspan="3">$date :</td></tr>')))
-    print('</table></body></html>')
+        filter=False)
+    print(jinjaenv.get_template("html.html").render(data=data))
+
+#    TODO :
+#    - écrire la doc
+#    - regrouper par weekend

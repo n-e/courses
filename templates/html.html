@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset='UTF-8'>
+    <style>
+    body {font-family:Helvetica, Arial, sans-serif; font-size:14px; line-height:1.2; color:#333;}
+    table { border-collapse:collapse; }
+    td { padding: 2px 4px;}
+    .date td {padding-top:1.5em; font-weight:bold;}
+    .course { border:1px solid #aaa; }
+    .lieu {font-size:90%}
+    .fsgt-69 :not(.day) { color: #ff2125;}
+    .pass-cyclisme :not(.day) { color: #277fff;}
+    .fsgt-69 :not(.day), .pass-cyclisme :not(.day) {font-weight:600;}
+    a {color: inherit; text-decoration:none;}
+    a:hover {text-decoration:underline;}
+    @media print {
+        body { color:black; font-size:8pt; columns:2;}
+        tr { break-inside: avoid; }
+        .course { break-before:avoid; }
+    }
+    </style>
+</head>
+<body>
+    <table>
+        {% for jours in data %}
+        <tr class="date"><td colspan="3">{{ jours[0][0]['date']|formatwe }} :</td></tr>
+        {% for courses in jours %}
+        
+        {% for c in courses %}
+        <tr class='course {{ c.fede_slug }} {{ c.cate_slug }}'>
+            {% if loop.first %}<td class='day' rowspan='{{courses|length}}'>{{c.date|day}}</td>{% endif %}
+            <td class='cate'>{{c.fede}} {{c.cate}}</td>
+            <td><a href='{{ c.lien }}'>{{ c.nom }}</a></td>
+            <td class='lieu'>{{ c.lieu }}</td>
+        </tr>
+        {% endfor %}
+        {% endfor %}
+        {% endfor %}
+    </table>
+</body>
+</html>
