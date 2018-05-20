@@ -8,20 +8,22 @@
     td { padding: 2px 4px;}
     .date td {padding-top:1.5em; font-weight:bold;}
     .course { border:1px solid #aaa; }
-    .lieu {font-size:90%}
+    .lieu, .cate {font-size:90%}
     .fsgt-69 :not(.day) { color: #ff2125;}
     .pass-cyclisme :not(.day) { color: #277fff;}
+    .cate { white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
     .fsgt-69 :not(.day), .pass-cyclisme :not(.day) {font-weight:600;}
     a {color: inherit; text-decoration:none;}
     a:hover {text-decoration:underline;}
     @media print {
-        body { color:black; font-size:8pt; columns:2; }
+        body { color:black; font-size:7pt; columns:2; }
 
         @page {
             margin:1cm 0.5cm 2cm;
         }
         tr { break-inside: avoid; }
         .date { break-after: avoid; }
+        .cate {max-width:7em;}
     }
     </style>
 </head>
