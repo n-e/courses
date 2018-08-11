@@ -1,0 +1,5 @@
+{% for jours in data %}
+{{ jours[0][0]['date']|formatwe }} :
+{% for courses in jours %}{% for c in courses %}{% if loop.first %}    {{c.date|day}} :{% endif %}
+        {{c.fede}} {{c.cate}}   {{ c.nom }}{{ c.lieu }}{% endfor %}{% endfor %}
+{% endfor %}

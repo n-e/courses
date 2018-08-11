@@ -1,0 +1,13 @@
+{%
+for jours in data %}{%
+    for courses in jours %}{%
+        for c in courses %}{%
+            if loop.first
+                %}
+[b]{{c.date|datef}} :[/b]
+{%
+            endif
+            %}  - {{c.fede}} {{c.cate}} : [url={{c.lien}}]{{ c.nom }}[/url] {{ c.lieu }}
+{%          endfor %}{%
+        endfor %}
+{% endfor %}

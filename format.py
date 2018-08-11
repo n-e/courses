@@ -173,7 +173,9 @@ def format_forum(courses,filter=False):
 
     if filter:
         courses = [c for c in courses if c['date']>time.gmtime() and datetime.fromtimestamp(time.mktime(c['date']))<datetime.now()+timedelta(days=10)]
-    
+    else:
+        courses = [c for c in courses if c['date']>time.gmtime()]
+
     courses = sorted(courses,key=cate_key)
     courses = sorted(courses, key=kf)
 
@@ -181,10 +183,6 @@ def format_forum(courses,filter=False):
     # print(byd)
     bywe = [list(v) for k,v in groupby(byd,kf2)]
     return bywe
-
-
-raw_template = Template('\t$fede $cate\t$nom\t$lieu\n')
-forum_template = Template('- $fede $cate : [url=$lien]$nom[/url] $lieu\n')
 
 
 ## PROGRAM START
@@ -215,8 +213,8 @@ for el in courses:
     el['lieu']=el['lieu'].title()
 
 
-jinjaenv.filters['datef'] = lambda d:time.strftime('%a %d %B',d)
-jinjaenv.filters['day'] = lambda d:time.strftime('%a %d',d)
+jinjaenv.filters['datef'] = lambda d:time.strftime('%a %d %B',d).capitalize()
+jinjaenv.filters['day'] = lambda d:time.strftime('%a %d',d).capitalize()
 
 def formatwe(d):
     dt = sttodt(d)
@@ -229,9 +227,15 @@ jinjaenv.filters['formatwe'] = formatwe
 
 
 if args.f == 'forum':
-    print(format_forum(courses,filter=True,tmpl=forum_template))
+    data = format_forum(
+        courses,
+        filter=True)
+    print(jinjaenv.get_template("forum.txt").render(data=data))
 elif args.f == 'txt' :
-    print(format_forum(courses,filter=False,tmpl=raw_template))
+    data = format_forum(
+        courses,
+        filter=False)
+    print(jinjaenv.get_template("txt.txt").render(data=data))
 elif args.f == 'html' :
     data = format_forum(
         courses,
@@ -240,4 +244,3 @@ elif args.f == 'html' :
 
 #    TODO :
 #    - écrire la doc
-#    - regrouper par weekend
