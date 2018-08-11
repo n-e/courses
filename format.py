@@ -51,11 +51,11 @@ locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
 
 def get_ffc(fichier):
     html = open(fichier,'r',encoding='utf8')
-    soup = BeautifulSoup(html, 'html.parser')
+    soup = BeautifulSoup(html, 'html5lib')
     courses_table = soup.find(attrs={'class':'se_mod_allevents_contenu'}).table
 
     courses = []
-    for c in courses_table.contents[::2]:
+    for c in courses_table.tbody.contents[::2]:
         details = c.next_sibling.td.contents
         c_el = {
             'fede':'FFC',
